@@ -14,5 +14,5 @@ module "test-vm" {
 
 }
 output "test-vm" {
-  value = module.test-vm.vms
+  value = module.test-vm.all_vms.vms
 }

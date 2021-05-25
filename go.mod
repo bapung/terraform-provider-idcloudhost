@@ -26,3 +26,7 @@ require (
 	google.golang.org/genproto v0.0.0-20210521181308-5ccab8a35a9a // indirect
 	google.golang.org/grpc v1.38.0 // indirect
 )
+
+replace (
+	github.com/bapung/idcloudhost-go-client-library => ../idcloudhost-go-client-library
+)

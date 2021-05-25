@@ -2,41 +2,26 @@ package idcloudhost
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"strconv"
 	"time"
 
-	c "github.com/bapung/idcloudhost-go-client-library/idcloudhost"
+	"github.com/bapung/idcloudhost-go-client-library/idcloudhost"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func Provider() *schema.Provider {
-	return &schema.Provider{
-		ResourcesMap: map[string]*schema.Resource{},
-		DataSourcesMap: map[string]*schema.Resource{
-			"idcloudhost_vms": dataSourceVirtualMachine(),
-		},
-	}
-}
-
 func dataSourceVirtualMachineRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+
+	c := m.(*idcloudhost.APIClient)
 	var diags diag.Diagnostics
 
-	/* testing purpose */
-	userAuthToken := "xxx"
-	loc := "jkt01"
-	v := c.VirtualMachineAPI{}
-	v.Init(userAuthToken, loc)
-	if err := v.ListAll(); err != nil {
+	vmApi := c.APIs["vm"].(*idcloudhost.VirtualMachineAPI)
+	if err := vmApi.ListAll(); err != nil {
 		log.Fatal(err)
 	}
-	inInterface := make([]map[string]interface{}, 0)
-	/* raw request*/
+	//inInterface := make([]map[string]interface{}, 0)
+	/* raw request
 
 	var cl c.HTTPClient
 	cl = &http.Client{}
@@ -50,8 +35,8 @@ func dataSourceVirtualMachineRead(ctx context.Context, d *schema.ResourceData, m
 	for field, val := range inInterface {
 		fmt.Println("KV Pair: ", field, val)
 	}
-	/* testing purpose */
-	if err := d.Set("vms", &inInterface); err != nil {
+	 testing purpose */
+	if err := d.Set("vms", &vmApi.VMListMap); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId(strconv.FormatInt(time.Now().Unix(), 10))

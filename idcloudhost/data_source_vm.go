@@ -20,22 +20,7 @@ func dataSourceVirtualMachineRead(ctx context.Context, d *schema.ResourceData, m
 	if err := vmApi.ListAll(); err != nil {
 		log.Fatal(err)
 	}
-	//inInterface := make([]map[string]interface{}, 0)
-	/* raw request
 
-	var cl c.HTTPClient
-	cl = &http.Client{}
-	url := "https://api.idcloudhost.com/v1/jkt01/user-resource/vm/list"
-	req, _ := http.NewRequest("GET", url, nil)
-	req.Header.Set("apiKey", userAuthToken)
-	r, _ := cl.Do(req)
-	defer r.Body.Close()
-	bodyByte, _ := ioutil.ReadAll(r.Body)
-	json.Unmarshal(bodyByte, &inInterface)
-	for field, val := range inInterface {
-		fmt.Println("KV Pair: ", field, val)
-	}
-	 testing purpose */
 	if err := d.Set("vms", &vmApi.VMListMap); err != nil {
 		return diag.FromErr(err)
 	}

@@ -14,10 +14,13 @@ func Provider() *schema.Provider {
 			"auth_token": &schema.Schema{
 				Type:        schema.TypeString,
 				Optional:    true,
+				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("IDCLOUDHOST_AUTH_TOKEN", nil),
 			},
 		},
-		ResourcesMap: map[string]*schema.Resource{},
+		ResourcesMap: map[string]*schema.Resource{
+			"idcloudhost_vm": resourceVirtualMachine(),
+		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"idcloudhost_vms": dataSourceVirtualMachine(),
 		},

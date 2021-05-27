@@ -2,7 +2,9 @@ package idcloudhost
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/bapung/idcloudhost-go-client-library/idcloudhost"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -15,6 +17,9 @@ func resourceVirtualMachine() *schema.Resource {
 		ReadContext:   resourceVirtualMachineRead,
 		UpdateContext: resourceVirtualMachineUpdate,
 		DeleteContext: resourceVirtualMachineDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(5 * time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			"backup": {
 				Type:     schema.TypeBool,
@@ -37,6 +42,13 @@ func resourceVirtualMachine() *schema.Resource {
 			"disks": {
 				Type:     schema.TypeInt,
 				Required: true,
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(int)
+					if v < 20 || v > 240 {
+						errs = append(errs, fmt.Errorf("%q must be between 20 and 240, got: %d", key, v))
+					}
+					return
+				},
 			},
 			"hostname": {
 				Type:     schema.TypeString,
@@ -57,6 +69,13 @@ func resourceVirtualMachine() *schema.Resource {
 			"memory": {
 				Type:     schema.TypeInt,
 				Required: true,
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(int)
+					if v < 1024 || v > 65536 {
+						errs = append(errs, fmt.Errorf("%q must be between 1024 and 66536, got: %d", key, v))
+					}
+					return
+				},
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -114,7 +133,7 @@ func resourceVirtualMachine() *schema.Resource {
 						},
 						"name": {
 							Type:     schema.TypeString,
-							Computed: true,
+							Required: true,
 						},
 						"pool": {
 							Type:     schema.TypeString,
@@ -184,6 +203,13 @@ func resourceVirtualMachine() *schema.Resource {
 			"vcpu": {
 				Type:     schema.TypeInt,
 				Required: true,
+				ValidateFunc: func(val interface{}, key string) (warns []string, errs []error) {
+					v := val.(int)
+					if v < 1 || v > 16 {
+						errs = append(errs, fmt.Errorf("%q must be between 1 and 16, got: %d", key, v))
+					}
+					return
+				},
 			},
 		},
 	}
@@ -198,6 +224,7 @@ func resourceVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, m
 		"billing_account":   d.Get("billing_account"), //should be automatically handled if the auth token is valid, to do
 		"description":       d.Get("description"),
 		"disks":             d.Get("disks"),
+		"name":              d.Get("name"),
 		"os_name":           d.Get("os_name"),
 		"os_version":        d.Get("os_version"),
 		"password":          d.Get("initial_password"),

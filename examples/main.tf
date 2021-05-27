@@ -22,11 +22,12 @@ resource "idcloudhost_vm" "testvm" {
     name = "testvm"
     os_name = "ubuntu"
     os_version= "16.04"
-    disks = 10
+    disks = 20
     vcpu = 1
-    memory = 512
+    memory = 2048
     username = "example"
     initial_password = "Password123"
+    billing_account = 1200132376
 }
 
 output "vm_created" {

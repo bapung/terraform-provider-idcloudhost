@@ -21,6 +21,11 @@ func resourceVirtualMachine() *schema.Resource {
 			Create: schema.DefaultTimeout(5 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
+			"last_updated": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"backup": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -221,7 +226,7 @@ func resourceVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, m
 
 	newVM := map[string]interface{}{
 		"backup":            d.Get("backup"),
-		"billing_account":   d.Get("billing_account"), //should be automatically handled if the auth token is valid, to do
+		"billing_account":   d.Get("billing_account"), //should be automatically assigned to "default" billing account if not specified
 		"description":       d.Get("description"),
 		"disks":             d.Get("disks"),
 		"name":              d.Get("name"),
@@ -268,6 +273,33 @@ func resourceVirtualMachineRead(ctx context.Context, d *schema.ResourceData, m i
 }
 
 func resourceVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	c := m.(*idcloudhost.APIClient)
+	uuid := d.Id()
+	propertyMap := map[string]interface{}{
+		"uuid": uuid, "vm": nil, "ram": nil, "name": nil,
+	}
+	isSomethingChanged := false
+	for k, _ := range propertyMap {
+		if d.HasChange(k) {
+			propertyMap[k] = d.Get(k)
+			isSomethingChanged = true
+		}
+	}
+	if isSomethingChanged {
+		vmApi := c.APIs["vm"].(*idcloudhost.VirtualMachineAPI)
+		err := vmApi.Modify(propertyMap)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		for k, v := range vmApi.VMMap {
+			err := d.Set(k, v)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
+		d.Set("last_updated", time.Now().Format(time.RFC850))
+	}
+
 	return resourceVirtualMachineRead(ctx, d, m)
 }
 

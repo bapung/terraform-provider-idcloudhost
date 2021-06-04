@@ -277,33 +277,33 @@ func resourceVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, m
 	c := m.(*idcloudhost.APIClient)
 	vmApi := c.APIs["vm"].(*idcloudhost.VirtualMachineAPI)
 	uuid := d.Id()
-	propertyMap := map[string]interface{}{
-		"uuid": uuid, "vcpu": nil, "ram": nil, "name": nil,
-	}
+	possibleChanges := []string{"vcpu", "memory", "name"}
 	isSomethingChanged := false
 	requireToFetchStatus := false
-	for k, _ := range propertyMap {
+	for _, k := range possibleChanges {
 		if d.HasChange(k) {
 			isSomethingChanged = true
-			if (k == "ram") || (k == "vcpu") {
+			if (k == "memory") || (k == "vcpu") {
 				requireToFetchStatus = true
 			}
 		}
-		propertyMap[k] = d.Get(k)
 	}
 
 	if requireToFetchStatus {
 		if err := vmApi.Get(uuid); err != nil {
-			if vmApi.VMMap["status"].(string) != "stopped" {
-				err := errors.New("VM is not in stopped state, cannot update resource")
-				return diag.FromErr(err)
-			}
 			err := errors.New("cannot fetch VM state for update, cannot update resource")
+			return diag.FromErr(err)
+		}
+		if vmApi.VMMap["status"].(string) != "stopped" {
+			err := errors.New("VM is not in stopped state, cannot update resource")
 			return diag.FromErr(err)
 		}
 	}
 
 	if isSomethingChanged {
+		propertyMap := map[string]interface{}{
+			"uuid": uuid, "vcpu": d.Get("vcpu"), "ram": d.Get("memory"), "name": d.Get("name"),
+		}
 		err := vmApi.Modify(propertyMap)
 		if err != nil {
 			return diag.FromErr(err)

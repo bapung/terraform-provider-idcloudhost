@@ -19,12 +19,12 @@ output "test-vm" {
 }
 
 resource "idcloudhost_vm" "testvm" {
-    name = "testvm"
+    name = "testvm-updated"
     os_name = "ubuntu"
     os_version= "16.04"
     disks = 20
     vcpu = 1
-    memory = 2048
+    memory = 1024
     username = "example"
     initial_password = "Password123"
     billing_account = 1200132376

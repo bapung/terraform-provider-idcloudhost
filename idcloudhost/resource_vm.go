@@ -21,6 +21,9 @@ func resourceVirtualMachine() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"last_updated": {
 				Type:     schema.TypeString,
@@ -96,8 +99,9 @@ func resourceVirtualMachine() *schema.Resource {
 				Required: true,
 			},
 			"initial_password": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
 			},
 			"private_ipv4": {
 				Type:     schema.TypeString,
@@ -322,5 +326,12 @@ func resourceVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVirtualMachineDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	c := m.(*idcloudhost.APIClient)
+	uuid := d.Id()
+	vmApi := c.APIs["vm"].(*idcloudhost.VirtualMachineAPI)
+	err := vmApi.Delete(uuid)
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	return diags
 }

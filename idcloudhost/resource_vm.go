@@ -116,6 +116,10 @@ func resourceVirtualMachine() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"public_ip": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"source_replica": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -281,30 +285,20 @@ func resourceVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, m
 	c := m.(*idcloudhost.APIClient)
 	vmApi := c.APIs["vm"].(*idcloudhost.VirtualMachineAPI)
 	uuid := d.Id()
-	possibleChanges := []string{"vcpu", "memory", "name"}
 	isSomethingChanged := false
-	requireToFetchStatus := false
-	for _, k := range possibleChanges {
-		if d.HasChange(k) {
-			isSomethingChanged = true
-			if (k == "memory") || (k == "vcpu") {
-				requireToFetchStatus = true
+
+	if d.HasChange("vcpu") || d.HasChange("ram") || d.HasChange("name") {
+		isSomethingChanged = true
+		if d.HasChange("vcpu") || d.HasChange("ram") {
+			if err := vmApi.Get(uuid); err != nil {
+				err := errors.New("cannot fetch VM state for update, cannot update resource")
+				return diag.FromErr(err)
+			}
+			if vmApi.VMMap["status"].(string) != "stopped" {
+				err := errors.New("VM is not in stopped state, cannot update resource")
+				return diag.FromErr(err)
 			}
 		}
-	}
-
-	if requireToFetchStatus {
-		if err := vmApi.Get(uuid); err != nil {
-			err := errors.New("cannot fetch VM state for update, cannot update resource")
-			return diag.FromErr(err)
-		}
-		if vmApi.VMMap["status"].(string) != "stopped" {
-			err := errors.New("VM is not in stopped state, cannot update resource")
-			return diag.FromErr(err)
-		}
-	}
-
-	if isSomethingChanged {
 		propertyMap := map[string]interface{}{
 			"uuid": uuid, "vcpu": d.Get("vcpu"), "ram": d.Get("memory"), "name": d.Get("name"),
 		}
@@ -312,6 +306,17 @@ func resourceVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, m
 		if err != nil {
 			return diag.FromErr(err)
 		}
+	}
+
+	if d.HasChange("backup") {
+		isSomethingChanged = true
+		err := vmApi.ToggleAutoBackup(uuid)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
+
+	if isSomethingChanged {
 		for k, v := range vmApi.VMMap {
 			err := d.Set(k, v)
 			if err != nil {

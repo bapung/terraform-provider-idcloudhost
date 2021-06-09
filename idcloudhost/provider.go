@@ -17,6 +17,11 @@ func Provider() *schema.Provider {
 				Sensitive:   true,
 				DefaultFunc: schema.EnvDefaultFunc("IDCLOUDHOST_AUTH_TOKEN", nil),
 			},
+			"region": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "jkt01",
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"idcloudhost_vm": resourceVirtualMachine(),
@@ -30,12 +35,13 @@ func Provider() *schema.Provider {
 
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	authToken := d.Get("auth_token").(string)
+	region := d.Get("region").(string)
 
 	// Warning or errors can be collected in a slice type
 	var diags diag.Diagnostics
 
 	if authToken != "" {
-		c, err := idcloudhost.NewClient(authToken, "jkt01")
+		c, err := idcloudhost.NewClient(authToken, region)
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}

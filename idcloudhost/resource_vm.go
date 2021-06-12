@@ -2,9 +2,7 @@ package idcloudhost
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/bapung/idcloudhost-go-client-library/idcloudhost"
@@ -253,7 +251,13 @@ func resourceVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, m
 
 	vmApi := c.APIs["vm"].(*idcloudhost.VirtualMachineAPI)
 	if err := vmApi.Create(newVM); err != nil {
-		log.Fatal(err)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to create new VM",
+			Detail:   "",
+		})
+
+		return diags
 	}
 
 	d.SetId(vmApi.VMMap["uuid"].(string))
@@ -270,47 +274,94 @@ func resourceVirtualMachineRead(ctx context.Context, d *schema.ResourceData, m i
 	vmApi := c.APIs["vm"].(*idcloudhost.VirtualMachineAPI)
 	err := vmApi.Get(uuid)
 	if err != nil {
-		return diag.FromErr(err)
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to get VM",
+			Detail:   "",
+		})
+		return diags
 	}
 	for k, v := range vmApi.VMMap {
 		err := d.Set(k, v)
 		if err != nil {
-			return diag.FromErr(err)
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to get VM",
+				Detail:   "Unable to set VM schema from API response",
+			})
+			return diags
 		}
 	}
 	return diags
 }
 
 func resourceVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	c := m.(*idcloudhost.APIClient)
 	vmApi := c.APIs["vm"].(*idcloudhost.VirtualMachineAPI)
 	uuid := d.Id()
 	isSomethingChanged := false
+	isFetchStatus := false
+	isUpdateProperty := false
 
-	if d.HasChange("vcpu") || d.HasChange("ram") || d.HasChange("name") {
+	propertyMap := map[string]interface{}{
+		"uuid": uuid,
+	}
+
+	if d.HasChange("name") {
 		isSomethingChanged = true
-		if d.HasChange("vcpu") || d.HasChange("ram") {
-			if err := vmApi.Get(uuid); err != nil {
-				err := errors.New("cannot fetch VM state for update, cannot update resource")
-				return diag.FromErr(err)
-			}
-			if vmApi.VMMap["status"].(string) != "stopped" {
-				err := errors.New("VM is not in stopped state, cannot update resource")
-				return diag.FromErr(err)
-			}
-		}
-		propertyMap := map[string]interface{}{
-			"uuid": uuid, "vcpu": d.Get("vcpu"), "ram": d.Get("memory"), "name": d.Get("name"),
-		}
-		err := vmApi.Modify(propertyMap)
-		if err != nil {
-			return diag.FromErr(err)
-		}
+		isUpdateProperty = true
+		propertyMap["name"] = d.Get("name")
+	}
+
+	if d.HasChange("vcpu") {
+		isSomethingChanged = true
+		isFetchStatus = true
+		isUpdateProperty = true
+		propertyMap["vcpu"] = d.Get("vcpu")
+	}
+
+	if d.HasChange("memory") {
+		isSomethingChanged = true
+		isFetchStatus = true
+		isUpdateProperty = true
+		propertyMap["ram"] = d.Get("memory")
 	}
 
 	if d.HasChange("backup") {
 		isSomethingChanged = true
 		err := vmApi.ToggleAutoBackup(uuid)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to toggle auto backup",
+				Detail:   "",
+			})
+			return diags
+		}
+	}
+
+	if isFetchStatus {
+		if err := vmApi.Get(uuid); err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Cannot fetch VM state",
+				Detail:   "cannot fetch VM state for update, cannot update resource",
+			})
+			return diags
+		}
+		if vmApi.VMMap["status"].(string) != "stopped" {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Cannot update VM",
+				Detail:   "Updating vcpu and ram requires VM to be stopped",
+			})
+			return diags
+		}
+	}
+
+	if isUpdateProperty {
+		err := vmApi.Modify(propertyMap)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -320,7 +371,12 @@ func resourceVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, m
 		for k, v := range vmApi.VMMap {
 			err := d.Set(k, v)
 			if err != nil {
-				return diag.FromErr(err)
+				diags = append(diags, diag.Diagnostic{
+					Severity: diag.Error,
+					Summary:  "Unable to get VM during update",
+					Detail:   "Unable to set VM schema from API response",
+				})
+				return diags
 			}
 		}
 		d.Set("last_updated", time.Now().Format(time.RFC850))

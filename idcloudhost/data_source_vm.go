@@ -16,12 +16,15 @@ func dataSourceVirtualMachineRead(ctx context.Context, d *schema.ResourceData, m
 	c := m.(*idcloudhost.APIClient)
 	var diags diag.Diagnostics
 
-	vmApi := c.APIs["vm"].(*idcloudhost.VirtualMachineAPI)
+	vmApi := c.VM
 	if err := vmApi.ListAll(); err != nil {
 		log.Fatal(err)
 	}
-
-	if err := d.Set("vms", &vmApi.VMListMap); err != nil {
+	vmList, err := adaptVMListStructToMap(&vmApi.VMList)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("vms", vmList); err != nil {
 		return diag.FromErr(err)
 	}
 	d.SetId(strconv.FormatInt(time.Now().Unix(), 10))

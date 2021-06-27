@@ -231,26 +231,26 @@ func resourceVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, m
 	c := m.(*idcloudhost.APIClient)
 	var diags diag.Diagnostics
 
-	newVM := map[string]interface{}{
-		"backup":            d.Get("backup"),
-		"billing_account":   d.Get("billing_account"), //should be automatically assigned to "default" billing account if not specified
-		"description":       d.Get("description"),
-		"disks":             d.Get("disks"),
-		"name":              d.Get("name"),
-		"os_name":           d.Get("os_name"),
-		"os_version":        d.Get("os_version"),
-		"password":          d.Get("initial_password"),
-		"public_key":        d.Get("public_key"),
-		"source_replica":    d.Get("source_replica"),
-		"source_uuid":       d.Get("source_uuid"),
-		"username":          d.Get("username"),
-		"vcpu":              d.Get("vcpu"),
-		"ram":               d.Get("memory"),
-		"reserve_public_ip": d.Get("reserve_public_ip"),
+	newVM := &idcloudhost.NewVM{
+		Backup:          d.Get("backup").(bool),
+		BillingAccount:  d.Get("billing_account").(int), //should be automatically assigned to "default" billing account if not specified
+		Description:     d.Get("description").(string),
+		Disks:           d.Get("disks").(int),
+		Name:            d.Get("name").(string),
+		OSName:          d.Get("os_name").(string),
+		OSVersion:       d.Get("os_version").(string),
+		InitialPassword: d.Get("initial_password").(string),
+		PublicKey:       d.Get("public_key").(string),
+		SourceReplica:   d.Get("source_replica").(string),
+		SourceUUID:      d.Get("source_uuid").(string),
+		Username:        d.Get("username").(string),
+		VCPU:            d.Get("vcpu").(int),
+		Memory:          d.Get("memory").(int),
+		ReservePublicIP: d.Get("reserve_public_ip").(bool),
 	}
 
-	vmApi := c.APIs["vm"].(*idcloudhost.VirtualMachineAPI)
-	if err := vmApi.Create(newVM); err != nil {
+	vmApi := c.VM
+	if err := vmApi.Create(*newVM); err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create new VM",
@@ -260,7 +260,7 @@ func resourceVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 
-	d.SetId(vmApi.VMMap["uuid"].(string))
+	d.SetId(vmApi.VM.UUID)
 
 	resourceVirtualMachineRead(ctx, d, m)
 
@@ -271,61 +271,75 @@ func resourceVirtualMachineRead(ctx context.Context, d *schema.ResourceData, m i
 	c := m.(*idcloudhost.APIClient)
 	var diags diag.Diagnostics
 	uuid := d.Id()
-	vmApi := c.APIs["vm"].(*idcloudhost.VirtualMachineAPI)
+	vmApi := c.VM
 	err := vmApi.Get(uuid)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get VM",
-			Detail:   "",
+			Detail:   fmt.Sprint(err),
 		})
 		return diags
 	}
-	for k, v := range vmApi.VMMap {
-		err := d.Set(k, v)
-		if err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Unable to get VM",
-				Detail:   "Unable to set VM schema from API response",
-			})
-			return diags
-		}
+
+	err = setVmResource(d, &vmApi.VM)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to get VM",
+			Detail:   fmt.Sprint(err),
+		})
+		return diags
 	}
+
 	return diags
 }
 
 func resourceVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	var isSomethingChanged = true
 	c := m.(*idcloudhost.APIClient)
-	vmApi := c.APIs["vm"].(*idcloudhost.VirtualMachineAPI)
+	vmApi := c.VM
 	uuid := d.Id()
-	isSomethingChanged := false
-	isFetchStatus := false
-	isUpdateProperty := false
 
-	propertyMap := map[string]interface{}{
-		"uuid": uuid,
-	}
-
-	if d.HasChange("name") {
+	if d.HasChanges("name", "vcpu", "memory") {
 		isSomethingChanged = true
-		isUpdateProperty = true
-		propertyMap["name"] = d.Get("name")
-	}
-
-	if d.HasChange("vcpu") {
-		isSomethingChanged = true
-		isFetchStatus = true
-		isUpdateProperty = true
-		propertyMap["vcpu"] = d.Get("vcpu")
-	}
-
-	if d.HasChange("memory") {
-		isSomethingChanged = true
-		isFetchStatus = true
-		isUpdateProperty = true
-		propertyMap["ram"] = d.Get("memory")
+		updatedVM := &idcloudhost.VM{
+			UUID:   uuid,
+			Name:   d.Get("name").(string),
+			VCPU:   d.Get("vcpu").(int),
+			Memory: d.Get("memory").(int),
+		}
+		err := vmApi.Get(uuid)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to modify VM",
+				Detail:   "cannot fetch VM state for update, cannot update resource",
+			})
+			return diags
+		}
+		if d.HasChanges("vcpu", "memory") && vmApi.VM.Status != "stopped" {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to modify VM",
+				Detail:   "Updating vcpu and ram requires VM to be stopped",
+			})
+			return diags
+		}
+		err = vmApi.Modify(*updatedVM)
+		if err != nil {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to modify VM",
+				Detail:   fmt.Sprint(err),
+			})
+			return diags
+		}
+		err = setVmResource(d, &vmApi.VM)
+		if err != nil {
+			return diags
+		}
 	}
 
 	if d.HasChange("backup") {
@@ -334,51 +348,22 @@ func resourceVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, m
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  "Unable to toggle auto backup",
-				Detail:   "",
+				Summary:  "Unable to modify VM",
+				Detail:   "Unable to toggle auto backup",
 			})
 			return diags
 		}
-	}
-
-	if isFetchStatus {
-		if err := vmApi.Get(uuid); err != nil {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Cannot fetch VM state",
-				Detail:   "cannot fetch VM state for update, cannot update resource",
-			})
-			return diags
-		}
-		if vmApi.VMMap["status"].(string) != "stopped" {
-			diags = append(diags, diag.Diagnostic{
-				Severity: diag.Error,
-				Summary:  "Cannot update VM",
-				Detail:   "Updating vcpu and ram requires VM to be stopped",
-			})
-			return diags
-		}
-	}
-
-	if isUpdateProperty {
-		err := vmApi.Modify(propertyMap)
+		err = setVmResource(d, &vmApi.VM)
 		if err != nil {
-			return diag.FromErr(err)
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to modify VM",
+				Detail:   fmt.Sprint(err),
+			})
+			return diags
 		}
 	}
-
 	if isSomethingChanged {
-		for k, v := range vmApi.VMMap {
-			err := d.Set(k, v)
-			if err != nil {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "Unable to get VM during update",
-					Detail:   "Unable to set VM schema from API response",
-				})
-				return diags
-			}
-		}
 		d.Set("last_updated", time.Now().Format(time.RFC850))
 	}
 
@@ -389,7 +374,7 @@ func resourceVirtualMachineDelete(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	c := m.(*idcloudhost.APIClient)
 	uuid := d.Id()
-	vmApi := c.APIs["vm"].(*idcloudhost.VirtualMachineAPI)
+	vmApi := c.VM
 	err := vmApi.Delete(uuid)
 	if err != nil {
 		return diag.FromErr(err)

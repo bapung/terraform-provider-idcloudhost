@@ -11,7 +11,7 @@ import (
 func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"auth_token": &schema.Schema{
+			"auth_token": {
 				Type:        schema.TypeString,
 				Optional:    true,
 				Sensitive:   true,
@@ -24,7 +24,8 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"idcloudhost_vm": resourceVirtualMachine(),
+			"idcloudhost_vm":       resourceVirtualMachine(),
+			"idcloudhost_vm_disks": resourceDisk(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"idcloudhost_vms": dataSourceVirtualMachine(),

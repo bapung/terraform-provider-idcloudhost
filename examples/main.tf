@@ -19,7 +19,7 @@ output "test-vm" {
 }
 
 resource "idcloudhost_vm" "testvm" {
-    name = "testvm-updated"
+    name = "testvm-2xxxxxx"
     os_name = "ubuntu"
     os_version= "16.04"
     disks = 20
@@ -28,6 +28,7 @@ resource "idcloudhost_vm" "testvm" {
     username = "example"
     initial_password = "Password123"
     billing_account = 1200132376
+    backup = true
 }
 
 output "vm_created" {

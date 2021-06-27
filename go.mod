@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/agext/levenshtein v1.2.3 // indirect
-	github.com/bapung/idcloudhost-go-client-library v0.0.2
+	github.com/bapung/idcloudhost-go-client-library v1.0.1
 	github.com/fatih/color v1.11.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-hclog v0.16.1 // indirect
@@ -12,7 +12,6 @@ require (
 	github.com/hashicorp/go-plugin v1.4.1 // indirect
 	github.com/hashicorp/go-uuid v1.0.2 // indirect
 	github.com/hashicorp/hcl/v2 v2.10.0 // indirect
-	github.com/hashicorp/terraform-plugin-sdk v1.17.2 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.6.1
 	github.com/hashicorp/yamux v0.0.0-20210316155119-a95892c5f864 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
@@ -26,5 +25,3 @@ require (
 	google.golang.org/genproto v0.0.0-20210521181308-5ccab8a35a9a // indirect
 	google.golang.org/grpc v1.38.0 // indirect
 )
-
-replace github.com/bapung/idcloudhost-go-client-library => ../idcloudhost-go-client-library

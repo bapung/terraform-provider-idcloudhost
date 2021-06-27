@@ -16,3 +16,5 @@ vendor/
 
 # Terraform files
 examples/.terraform*
+examples/*.tfstate*
+examples/*.log

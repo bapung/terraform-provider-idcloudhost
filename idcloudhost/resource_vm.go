@@ -109,11 +109,6 @@ func resourceVirtualMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"reserve_public_ip": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
 			"public_ip": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -246,7 +241,7 @@ func resourceVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, m
 		Username:        d.Get("username").(string),
 		VCPU:            d.Get("vcpu").(int),
 		Memory:          d.Get("memory").(int),
-		ReservePublicIP: d.Get("reserve_public_ip").(bool),
+		ReservePublicIP: false,
 	}
 
 	vmApi := c.VM

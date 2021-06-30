@@ -96,3 +96,41 @@ func adaptVMListStructToMap(vmList *[]idcloudhost.VM) ([]map[string]interface{},
 	}
 	return vmMapList, nil
 }
+
+func setFloatingIP(d *schema.ResourceData, fip *idcloudhost.FloatingIP) error {
+	if err := d.Set("id", strconv.Itoa(fip.ID)); err != nil {
+		return err
+	}
+	if err := d.Set("address", fip.Address); err != nil {
+		return err
+	}
+	if err := d.Set("user_id", fip.UserID); err != nil {
+		return err
+	}
+	if err := d.Set("billing_account_id", fip.UserID); err != nil {
+		return err
+	}
+	if err := d.Set("type", fip.Type); err != nil {
+		return err
+	}
+	if err := d.Set("network_id", fip.NetworkID); err != nil {
+		return err
+	}
+	if err := d.Set("name", fip.Name); err != nil {
+		return err
+	}
+	if err := d.Set("enabled", fip.Enabled); err != nil {
+		return err
+	}
+	if err := d.Set("created_at", fip.CreatedAt); err != nil {
+		return err
+	}
+	if err := d.Set("updated_at", fip.UpdatedAt); err != nil {
+		return err
+	}
+	if err := d.Set("assigned_to", fip.AssignedTo); err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -14,23 +14,21 @@ module "test-vm" {
 
 }
 
-output "test-vm" {
-  value = module.test-vm.all_vms.vms
-}
-
 resource "idcloudhost_vm" "testvm" {
-    name = "testvm-2xxxxxx"
+    name = "testvm"
     os_name = "ubuntu"
-    os_version= "16.04"
+    os_version= "18.04"
     disks = 20
     vcpu = 1
     memory = 1024
     username = "example"
     initial_password = "Password123"
     billing_account = 1200132376
-    backup = true
+    backup = false
 }
 
-output "vm_created" {
-  value = idcloudhost_vm.testvm
+resource "idcloudhost_floating_ip" "testip" {
+    name = "my_test_ip"
+    billing_account = 1200132376
+    assigned_to = idcloudhost_vm.testvm.id
 }

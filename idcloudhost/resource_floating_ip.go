@@ -103,18 +103,19 @@ func resourceFloatingIPCreate(ctx context.Context, d *schema.ResourceData, m int
 		diags = append(diags, diag.Diagnostic{})
 		return diags
 	}
+	d.SetId(fipApi.FloatingIP.Address)
 	if assignedUuid != "" {
 		err := fipApi.Assign(fipApi.FloatingIP.Address, assignedUuid)
 		if err != nil {
+			resourceFloatingIPDelete(ctx, d, m)
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to create Floating IP",
-				Detail:   fmt.Sprintf("cannot assign to specified UUID: %s", assignedUuid),
+				Detail:   fmt.Sprint(err),
 			})
 			return diags
 		}
 	}
-	d.SetId(fipApi.FloatingIP.Address)
 	resourceFloatingIPRead(ctx, d, m)
 
 	return diags
@@ -163,14 +164,19 @@ func resourceFloatingIPUpdate(ctx context.Context, d *schema.ResourceData, m int
 		}
 	}
 
-	if d.HasChange("assignedUuid") {
+	if d.HasChange("assigned_to") {
+		var err error
 		assignedUuid := d.Get("assigned_to").(string)
-		err := fipApi.Assign(fipApi.FloatingIP.Address, assignedUuid)
+		if assignedUuid != "" {
+			err = fipApi.Assign(fipApi.FloatingIP.Address, assignedUuid)
+		} else {
+			err = fipApi.Unassign(fipApi.FloatingIP.Address)
+		}
 		if err != nil {
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
 				Summary:  "Unable to update Floating IP",
-				Detail:   fmt.Sprintf("cannot assign to specified UUID: %s", assignedUuid),
+				Detail:   fmt.Sprintf("cannot (un)assign to specified UUID: %s", assignedUuid),
 			})
 			return diags
 		}

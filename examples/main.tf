@@ -29,6 +29,5 @@ resource "idcloudhost_vm" "testvm" {
 
 resource "idcloudhost_floating_ip" "testip" {
     name = "my_test_ip"
-    billing_account = 1200132376
-    assigned_to = idcloudhost_vm.testvm.id
+    billing_account_id = 1200132376
 }

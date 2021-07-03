@@ -33,7 +33,7 @@ func resourceVirtualMachine() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"billing_account": {
+			"billing_account_id": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  0,
@@ -228,7 +228,7 @@ func resourceVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, m
 
 	newVM := &idcloudhost.NewVM{
 		Backup:          d.Get("backup").(bool),
-		BillingAccount:  d.Get("billing_account").(int), //should be automatically assigned to "default" billing account if not specified
+		BillingAccount:  d.Get("billing_account_id").(int), //should be automatically assigned to "default" billing account if not specified
 		Description:     d.Get("description").(string),
 		Disks:           d.Get("disks").(int),
 		Name:            d.Get("name").(string),

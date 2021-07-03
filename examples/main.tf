@@ -23,7 +23,7 @@ resource "idcloudhost_vm" "testvm" {
     memory = 1024
     username = "example"
     initial_password = "Password123"
-    billing_account = 1200132376
+    billing_account_id = 1200132376
     backup = false
 }
 

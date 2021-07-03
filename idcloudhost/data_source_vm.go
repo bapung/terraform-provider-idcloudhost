@@ -35,7 +35,7 @@ func dataSourceVirtualMachine() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceVirtualMachineRead,
 		Schema: map[string]*schema.Schema{
-			"vms": &schema.Schema{
+			"vms": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -44,7 +44,7 @@ func dataSourceVirtualMachine() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"billing_account": {
+						"billing_account_id": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},

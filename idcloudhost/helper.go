@@ -24,7 +24,7 @@ func setVmResource(d *schema.ResourceData, vm *idcloudhost.VM) error {
 	if err := d.Set("backup", vm.Backup); err != nil {
 		return err
 	}
-	if err := d.Set("billing_account", vm.BillingAccount); err != nil {
+	if err := d.Set("billing_account_id", vm.BillingAccount); err != nil {
 		return err
 	}
 	if err := d.Set("created_at", vm.CreatedAt); err != nil {

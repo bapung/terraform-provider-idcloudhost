@@ -34,7 +34,7 @@ func resourceDisk() *schema.Resource {
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
 			"pool": {
 				Type:     schema.TypeString,
@@ -86,11 +86,11 @@ func resourceDisk() *schema.Resource {
 func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	c := m.(*idcloudhost.APIClient)
 	var diags diag.Diagnostics
+	diskApi := c.Disk
 
 	vmUUID := d.Get("vm_uuid").(string)
 	diskSize := d.Get("size").(int)
 
-	diskApi := c.Disk
 	diskApi.Bind(vmUUID)
 	err := diskApi.Create(diskSize)
 	if err != nil {
@@ -102,8 +102,8 @@ func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, m interface
 		return diags
 	}
 
-	diskId := fmt.Sprintf("%s/%s", vmUUID, diskApi.Disk.UUID)
-	d.SetId(diskId)
+	diskResourceId := fmt.Sprintf("%s/%s", vmUUID, diskApi.Disk.UUID)
+	d.SetId(diskResourceId)
 
 	resourceDiskRead(ctx, d, m)
 
@@ -111,39 +111,99 @@ func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, m interface
 }
 
 func resourceDiskRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(*idcloudhost.APIClient)
 	var diags diag.Diagnostics
-	ids := strings.Split(d.Id(), "/")
-	vmUUID := ids[0]
-	diskUUID := ids[1]
+	c := m.(*idcloudhost.APIClient)
 	diskApi := c.Disk
+
+	diskResourceId := strings.Split(d.Id(), "/")
+	vmUUID := diskResourceId[0]
+	diskUUID := diskResourceId[1]
 	diskApi.Bind(vmUUID)
 	err := diskApi.Get(diskUUID)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to get Disk",
-			Detail:   "",
+			Detail:   fmt.Sprint(err),
 		})
 		return diags
 	}
-	// assign state using d.Set() here
-
+	err = setDiskResource(d, diskApi.Disk)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to get Disk",
+			Detail:   fmt.Sprint(err),
+		})
+		return diags
+	}
 	return diags
 }
 
 func resourceDiskUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	var newSize, oldSize int
+	c := m.(*idcloudhost.APIClient)
+	diskApi := c.Disk
 
+	diskResourceId := strings.Split(d.Id(), "/")
+	vmUUID := diskResourceId[0]
+	diskUUID := diskResourceId[1]
+
+	if d.HasChange("vm_uuid") {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to update disk",
+			Detail:   "Disk cannot be reassigned to other resources",
+		})
+		return diags
+	}
+
+	if d.HasChange("size") {
+		oldSizeIface, newSizeIface := d.GetChange("size")
+		newSize = newSizeIface.(int)
+		oldSize = oldSizeIface.(int)
+		isShrink := newSize-oldSize < 0
+		if isShrink {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  "Unable to update disk",
+				Detail:   "Disk cannot be resized, shrinking disk is not possible",
+			})
+			return diags
+		}
+	}
+	diskApi.Bind(vmUUID)
+	err := diskApi.Modify(diskUUID, newSize)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to update Disk",
+			Detail:   fmt.Sprint(err),
+		})
+		return diags
+	}
+	err = setDiskResource(d, diskApi.Disk)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to update Disk",
+			Detail:   fmt.Sprint(err),
+		})
+		return diags
+	}
 	return diags
 }
 
 func resourceDiskDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	c := m.(*idcloudhost.APIClient)
-	diskUUID := d.Id()
-	vmUUID := d.Get("vm_uuid").(string)
+
 	diskApi := c.Disk
+	diskResourceId := strings.Split(d.Id(), "/")
+	vmUUID := diskResourceId[0]
+	diskUUID := diskResourceId[1]
+
 	diskApi.Bind(vmUUID)
 	err := diskApi.Delete(diskUUID)
 	if err != nil {

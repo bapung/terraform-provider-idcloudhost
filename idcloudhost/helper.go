@@ -134,3 +134,44 @@ func setFloatingIP(d *schema.ResourceData, fip *idcloudhost.FloatingIP) error {
 
 	return nil
 }
+
+func setDiskResource(d *schema.ResourceData, disk *idcloudhost.DiskStorage) error {
+	if err := d.Set("created_at", disk.CreatedAt); err != nil {
+		return err
+	}
+	if err := d.Set("id", strconv.Itoa(disk.Id)); err != nil {
+		return err
+	}
+	if err := d.Set("name", disk.Name); err != nil {
+		return err
+	}
+	if err := d.Set("pool", disk.Pool); err != nil {
+		return err
+	}
+	if err := d.Set("primary", disk.Primary); err != nil {
+		return err
+	}
+	if err := d.Set("replica", disk.Replica); err != nil {
+		return err
+	}
+	if err := d.Set("shared", disk.Shared); err != nil {
+		return err
+	}
+	if err := d.Set("size", disk.SizeGB); err != nil {
+		return err
+	}
+	if err := d.Set("type", disk.Type); err != nil {
+		return err
+	}
+	if err := d.Set("updated_at", disk.UpdatedAt); err != nil {
+		return err
+	}
+	if err := d.Set("user_id", disk.UserId); err != nil {
+		return err
+	}
+	if err := d.Set("uuid", disk.UUID); err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -9,7 +9,6 @@ terraform {
 
 data "idcloudhost_vms" "all" {}
 
-# Returns all coffees
 output "all_vms" {
   value = data.idcloudhost_vms.all
 }

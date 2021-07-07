@@ -23,11 +23,6 @@ func resourceVirtualMachine() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"last_updated": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
 			"backup": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -35,8 +30,7 @@ func resourceVirtualMachine() *schema.Resource {
 			},
 			"billing_account_id": {
 				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
+				Required: true,
 			},
 			"created_at": {
 				Type:     schema.TypeString,
@@ -106,10 +100,6 @@ func resourceVirtualMachine() *schema.Resource {
 				Computed: true,
 			},
 			"public_key": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"public_ip": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

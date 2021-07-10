@@ -23,30 +23,16 @@ func resourceFloatingIP() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			// ID             int    `json:"id,omitempty"`
-			// Address        string `json:"address,omitempty"`
-			// UserID         int    `json:"user_id,omitempty"`
-			// BillingAccount int    `json:"billing_account_id"`
-			// Type           string `json:"type,omitempty"`
-			// NetworkID      string `json:"network_id,omitempty"`
-			// Name           string `json:"name"`
-			// Enabled        bool   `json:"enabled,omitempty"`
-			// CreatedAt      string `json:"created_at,omitempty"`
-			// UpdatedAt      string `json:"updated_at,omitempty"`
-			// AssignedTo     string `json:"assigned_to,omitempty"`
 			"id": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"address": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"user_id": {
 				Type:     schema.TypeInt,
-				Optional: true,
 				Computed: true,
 			},
 			"billing_account_id": {
@@ -55,12 +41,10 @@ func resourceFloatingIP() *schema.Resource {
 			},
 			"type": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"network_id": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"name": {
@@ -69,17 +53,14 @@ func resourceFloatingIP() *schema.Resource {
 			},
 			"enabled": {
 				Type:     schema.TypeBool,
-				Optional: true,
 				Computed: true,
 			},
 			"created_at": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"updated_at": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"assigned_to": {

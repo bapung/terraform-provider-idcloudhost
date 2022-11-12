@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     idcloudhost = {
-      version = "0.1.0"
+      version = "0.2.0"
       source  = "github.com/bapung/idcloudhost"
     }
   }
@@ -23,11 +23,16 @@ resource "idcloudhost_vm" "testvm" {
     memory = 1024
     username = "example"
     initial_password = "Password123"
-    billing_account_id = 1200132376
+    billing_account_id = 1200177265
     backup = false
 }
 
 resource "idcloudhost_floating_ip" "testip" {
     name = "my_test_ip"
-    billing_account_id = 1200132376
+    billing_account_id = 1200177265
+}
+
+resource "idcloudhost_vm_disks" "test_disk" {
+    size = 22
+    vm_uuid = idcloudhost_vm.testvm.uuid
 }

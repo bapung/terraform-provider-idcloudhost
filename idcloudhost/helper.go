@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"strconv"
 
-	idcloudhostAPI "github.com/bapung/idcloudhost-go-client-library/idcloudhost/api"
-
 	idcloudhostVM "github.com/bapung/idcloudhost-go-client-library/idcloudhost/vm"
 	idcloudhostDisk "github.com/bapung/idcloudhost-go-client-library/idcloudhost/disk"
 	idcloudhostFloatingIP "github.com/bapung/idcloudhost-go-client-library/idcloudhost/floatingip"

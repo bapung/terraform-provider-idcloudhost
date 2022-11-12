@@ -120,11 +120,16 @@ func resourceDiskRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	vmUUID := diskResourceId[0]
 	diskUUID := diskResourceId[1]
 	diskApi.Bind(vmUUID)
-	err := vmApi.Get(d.vmUUID)
+	err := vmApi.Get(vmUUID)
 	if err != nil {
-		return err
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to get Disk from specified VM",
+			Detail:   fmt.Sprint(err),
+		})
+		return diags
 	}
-	err := diskApi.Get(diskUUID, &vmApi.VM.Storage)
+	err = diskApi.Get(diskUUID, &vmApi.VM.Storage)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,

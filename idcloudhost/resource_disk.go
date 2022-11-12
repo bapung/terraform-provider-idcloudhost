@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/bapung/idcloudhost-go-client-library/idcloudhost"
+	"github.com/bapung/idcloudhost-go-client-library/idcloudhost/vm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -114,12 +115,17 @@ func resourceDiskRead(ctx context.Context, d *schema.ResourceData, m interface{}
 	var diags diag.Diagnostics
 	c := m.(*idcloudhost.APIClient)
 	diskApi := c.Disk
+	vmApi := c.VM
 
 	diskResourceId := strings.Split(d.Id(), "/")
 	vmUUID := diskResourceId[0]
 	diskUUID := diskResourceId[1]
 	diskApi.Bind(vmUUID)
-	err := diskApi.Get(diskUUID)
+	err := vmApi.Get(d.vmUUID)
+	if err != nil {
+		return err
+	}
+	err := diskApi.Get(diskUUID, &vmApi.VM.Storage)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,

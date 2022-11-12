@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bapung/idcloudhost-go-client-library/idcloudhost"
+	idcloudhostVM "github.com/bapung/idcloudhost-go-client-library/idcloudhost/vm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -216,7 +217,7 @@ func resourceVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, m
 	c := m.(*idcloudhost.APIClient)
 	var diags diag.Diagnostics
 
-	newVM := &idcloudhost.NewVM{
+	newVM := &idcloudhostVM.NewVM{
 		Backup:          d.Get("backup").(bool),
 		BillingAccount:  d.Get("billing_account_id").(int), //should be automatically assigned to "default" billing account if not specified
 		Description:     d.Get("description").(string),
@@ -289,7 +290,7 @@ func resourceVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChanges("name", "vcpu", "memory") {
 		isSomethingChanged = true
-		updatedVM := &idcloudhost.VM{
+		updatedVM := &idcloudhostVM.VM{
 			UUID:   uuid,
 			Name:   d.Get("name").(string),
 			VCPU:   d.Get("vcpu").(int),

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bapung/idcloudhost-go-client-library/idcloudhost"
+	idcloudhostAPI "github.com/bapung/idcloudhost-go-client-library/idcloudhost/api"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -84,7 +84,7 @@ func resourceDisk() *schema.Resource {
 }
 
 func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 	var diags diag.Diagnostics
 	diskApi := c.Disk
 
@@ -112,14 +112,24 @@ func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, m interface
 
 func resourceDiskRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 	diskApi := c.Disk
+	vmApi := c.VM
 
 	diskResourceId := strings.Split(d.Id(), "/")
 	vmUUID := diskResourceId[0]
 	diskUUID := diskResourceId[1]
 	diskApi.Bind(vmUUID)
-	err := diskApi.Get(diskUUID)
+	err := vmApi.Get(vmUUID)
+	if err != nil {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Unable to get Disk from specified VM",
+			Detail:   fmt.Sprint(err),
+		})
+		return diags
+	}
+	err = diskApi.Get(diskUUID, &vmApi.VM.Storage)
 	if err != nil {
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
@@ -143,7 +153,7 @@ func resourceDiskRead(ctx context.Context, d *schema.ResourceData, m interface{}
 func resourceDiskUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var newSize, oldSize int
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 	diskApi := c.Disk
 
 	diskResourceId := strings.Split(d.Id(), "/")
@@ -197,7 +207,7 @@ func resourceDiskUpdate(ctx context.Context, d *schema.ResourceData, m interface
 
 func resourceDiskDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 
 	diskApi := c.Disk
 	diskResourceId := strings.Split(d.Id(), "/")

@@ -6,14 +6,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bapung/idcloudhost-go-client-library/idcloudhost"
+	idcloudhostAPI "github.com/bapung/idcloudhost-go-client-library/idcloudhost/api"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceVirtualMachineRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 	var diags diag.Diagnostics
 
 	vmApi := c.VM

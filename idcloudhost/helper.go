@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/bapung/idcloudhost-go-client-library/idcloudhost"
+	idcloudhostVM "github.com/bapung/idcloudhost-go-client-library/idcloudhost/vm"
+	idcloudhostDisk "github.com/bapung/idcloudhost-go-client-library/idcloudhost/disk"
+	idcloudhostFloatingIP "github.com/bapung/idcloudhost-go-client-library/idcloudhost/floatingip"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func setVmResource(d *schema.ResourceData, vm *idcloudhost.VM) error {
+func setVmResource(d *schema.ResourceData, vm *idcloudhostVM.VM) error {
 	var storageList []map[string]interface{}
 	storageJson, err := json.Marshal(vm.Storage)
 	if err != nil {
@@ -84,7 +86,7 @@ func setVmResource(d *schema.ResourceData, vm *idcloudhost.VM) error {
 	return nil
 }
 
-func adaptVMListStructToMap(vmList *[]idcloudhost.VM) ([]map[string]interface{}, error) {
+func adaptVMListStructToMap(vmList *[]idcloudhostVM.VM) ([]map[string]interface{}, error) {
 	var vmMapList []map[string]interface{}
 	vmJson, err := json.Marshal(vmMapList)
 	if err != nil {
@@ -97,7 +99,7 @@ func adaptVMListStructToMap(vmList *[]idcloudhost.VM) ([]map[string]interface{},
 	return vmMapList, nil
 }
 
-func setFloatingIP(d *schema.ResourceData, fip *idcloudhost.FloatingIP) error {
+func setFloatingIP(d *schema.ResourceData, fip *idcloudhostFloatingIP.FloatingIP) error {
 	if err := d.Set("id", strconv.Itoa(fip.ID)); err != nil {
 		return err
 	}
@@ -135,7 +137,7 @@ func setFloatingIP(d *schema.ResourceData, fip *idcloudhost.FloatingIP) error {
 	return nil
 }
 
-func setDiskResource(d *schema.ResourceData, disk *idcloudhost.DiskStorage) error {
+func setDiskResource(d *schema.ResourceData, disk *idcloudhostDisk.DiskStorage) error {
 	if err := d.Set("created_at", disk.CreatedAt); err != nil {
 		return err
 	}

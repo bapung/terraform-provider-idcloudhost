@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bapung/idcloudhost-go-client-library/idcloudhost"
+	idcloudhostAPI "github.com/bapung/idcloudhost-go-client-library/idcloudhost/api"
+	idcloudhostVM "github.com/bapung/idcloudhost-go-client-library/idcloudhost/vm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -213,10 +214,10 @@ func resourceVirtualMachine() *schema.Resource {
 }
 
 func resourceVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 	var diags diag.Diagnostics
 
-	newVM := &idcloudhost.NewVM{
+	newVM := &idcloudhostVM.NewVM{
 		Backup:          d.Get("backup").(bool),
 		BillingAccount:  d.Get("billing_account_id").(int), //should be automatically assigned to "default" billing account if not specified
 		Description:     d.Get("description").(string),
@@ -253,7 +254,7 @@ func resourceVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceVirtualMachineRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 	var diags diag.Diagnostics
 	uuid := d.Id()
 	vmApi := c.VM
@@ -283,13 +284,13 @@ func resourceVirtualMachineRead(ctx context.Context, d *schema.ResourceData, m i
 func resourceVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var isSomethingChanged = true
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 	vmApi := c.VM
 	uuid := d.Id()
 
 	if d.HasChanges("name", "vcpu", "memory") {
 		isSomethingChanged = true
-		updatedVM := &idcloudhost.VM{
+		updatedVM := &idcloudhostVM.VM{
 			UUID:   uuid,
 			Name:   d.Get("name").(string),
 			VCPU:   d.Get("vcpu").(int),
@@ -357,7 +358,7 @@ func resourceVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVirtualMachineDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 	uuid := d.Id()
 	vmApi := c.VM
 	err := vmApi.Delete(uuid)

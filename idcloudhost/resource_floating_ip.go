@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bapung/idcloudhost-go-client-library/idcloudhost"
+	idcloudhostAPI "github.com/bapung/idcloudhost-go-client-library/idcloudhost/api"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -73,7 +73,7 @@ func resourceFloatingIP() *schema.Resource {
 }
 func resourceFloatingIPCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 	fipApi := c.FloatingIP
 
 	billingAccountId := d.Get("billing_account_id").(int)
@@ -103,7 +103,7 @@ func resourceFloatingIPCreate(ctx context.Context, d *schema.ResourceData, m int
 }
 
 func resourceFloatingIPRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 	var diags diag.Diagnostics
 	ipAddress := d.Id()
 	fipApi := c.FloatingIP
@@ -132,7 +132,7 @@ func resourceFloatingIPRead(ctx context.Context, d *schema.ResourceData, m inter
 
 func resourceFloatingIPUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 	fipApi := c.FloatingIP
 	ipAddress := d.Id()
 	if d.HasChanges("billing_account_id", "name") {
@@ -170,7 +170,7 @@ func resourceFloatingIPUpdate(ctx context.Context, d *schema.ResourceData, m int
 
 func resourceFloatingIPDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 	ipAddress := d.Id()
 	fipApi := c.FloatingIP
 	err := fipApi.Delete(ipAddress)

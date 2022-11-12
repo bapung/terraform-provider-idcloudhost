@@ -3,7 +3,7 @@ package idcloudhost
 import (
 	"context"
 
-	"github.com/bapung/idcloudhost-go-client-library/idcloudhost"
+	idcloudhostAPI "github.com/bapung/idcloudhost-go-client-library/idcloudhost/api"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -43,13 +43,13 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	var diags diag.Diagnostics
 
 	if authToken != "" {
-		c, err := idcloudhost.NewClient(authToken, region)
+		c, err := idcloudhostAPI.NewClient(authToken, region)
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
 		return c, diags
 	}
-	c, err := idcloudhost.NewClient("", "")
+	c, err := idcloudhostAPI.NewClient("", "")
 	if err != nil {
 		return nil, diag.FromErr(err)
 	}

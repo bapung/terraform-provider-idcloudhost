@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     idcloudhost = {
-      version = "0.2"
+      version = "0.2.0"
       source  = "github.com/bapung/idcloudhost"
     }
   }

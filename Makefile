@@ -9,6 +9,7 @@ OS_ARCH=linux_amd64
 default: install
 
 build:
+	go mod tidy
 	go build -o ${BINARY}
 
 release:

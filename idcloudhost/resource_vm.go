@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bapung/idcloudhost-go-client-library/idcloudhost"
+	idcloudhostAPI "github.com/bapung/idcloudhost-go-client-library/idcloudhost/api"
 	idcloudhostVM "github.com/bapung/idcloudhost-go-client-library/idcloudhost/vm"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -214,7 +214,7 @@ func resourceVirtualMachine() *schema.Resource {
 }
 
 func resourceVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 	var diags diag.Diagnostics
 
 	newVM := &idcloudhostVM.NewVM{
@@ -254,7 +254,7 @@ func resourceVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceVirtualMachineRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 	var diags diag.Diagnostics
 	uuid := d.Id()
 	vmApi := c.VM
@@ -284,7 +284,7 @@ func resourceVirtualMachineRead(ctx context.Context, d *schema.ResourceData, m i
 func resourceVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	var isSomethingChanged = true
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 	vmApi := c.VM
 	uuid := d.Id()
 
@@ -358,7 +358,7 @@ func resourceVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVirtualMachineDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	c := m.(*idcloudhost.APIClient)
+	c := m.(*idcloudhostAPI.APIClient)
 	uuid := d.Id()
 	vmApi := c.VM
 	err := vmApi.Delete(uuid)

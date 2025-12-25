@@ -240,7 +240,7 @@ func resourceVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, m
 		diags = append(diags, diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Unable to create new VM",
-			Detail:   "",
+			Detail:   fmt.Sprint(err),
 		})
 
 		return diags
